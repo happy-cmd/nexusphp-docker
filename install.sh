@@ -24,6 +24,8 @@ fi
 # Clone the repository
 git submodule update
 
+git checkout v1.7.38
+
 # Wait for 5 seconds to finish cloning
 sleep 5
 
