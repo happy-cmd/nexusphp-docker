@@ -21,10 +21,19 @@ if [ -d "$LogPath" ]; then
     rm -rf "$LogPath"
 fi
 
-# Clone the repository
-git submodule update
+# 克隆子模块
+git submodule sync
+git submodule update --init --recursive
 
-git checkout v1.7.38
+# 进入子模块目录（假设子模块在 NexusPHP 中）
+cd NexusPHP
+
+# 拉取标签并切换到 v1.7.38
+git fetch --tags
+git checkout tags/v1.7.38
+
+# 返回原目录
+cd ..
 
 # Wait for 5 seconds to finish cloning
 sleep 5
@@ -73,16 +82,29 @@ CONTAINER_NAME="pt-mysql"
 SQL_SCRIPT_PATH="./docker-compose/sql/install.sql"
 CONTAINER_SQL_SCRIPT_PATH="/opt/install.sql"
 
-# Copy the SQL script to the container
-docker cp "$SQL_SCRIPT_PATH" "$CONTAINER_NAME":"$CONTAINER_SQL_SCRIPT_PATH"
 
-# Execute the SQL script
-if ! docker exec -i "$CONTAINER_NAME" mysql -u root -p"$mysqlpassword" < "$CONTAINER_SQL_SCRIPT_PATH"; then
-    echo "SQL script execution failed!"
-    echo "Please create the database 'nexusphp' using the following command:"
-    echo "create database nexusphp default charset=utf8mb4 collate utf8mb4_general_ci;"
+# 1. 验证 SQL 文件存在
+if [ ! -f "$SQL_SCRIPT_PATH" ]; then
+  echo "错误：找不到 SQL 文件 $SQL_SCRIPT_PATH"
+  exit 1
+fi
+
+
+# 3.等待 MySQL 启动（无警告）
+echo "等待 MySQL 启动..."
+until docker exec $CONTAINER_NAME sh -c "MYSQL_PWD=${mysqlpassword} mysqladmin ping -uroot --silent"; do
+  sleep 3
+done
+
+# 4.执行初始化脚本
+echo "执行数据库初始化脚本..."
+if ! docker exec -i "$CONTAINER_NAME" sh -c "export MYSQL_PWD='${mysqlpassword}'; mysql -u root -h 127.0.0.1" < "$SQL_SCRIPT_PATH"; then
+    echo "SQL 脚本执行失败！"
+    echo "请手动执行以下命令修复："
+    echo "docker exec -it pt-mysql mysql -u root -p'${mysqlpassword}' -e \"CREATE DATABASE nexusphp DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;\""
+    exit 1
 else
-    echo "SQL script executed successfully!"
+    echo "SQL 脚本执行成功！"
 fi
 
 echo "Installation completed"

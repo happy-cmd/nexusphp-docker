@@ -31,7 +31,7 @@ services:
       - nexusphp-network
     
   mysql:
-    image: mysql:8.0.39-debian
+    image: mysql:5.7
     container_name: pt-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
