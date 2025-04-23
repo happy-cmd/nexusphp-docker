@@ -55,9 +55,8 @@ RUN apk add --no-cache dcron && \
     mkdir -p /etc/cron.d 
 
 ENV COMPOSER_PROCESS_TIMEOUT=1200
-# 安装 Composer 并配置国内镜像
-RUN install-php-extensions @composer \
-    && composer config -g repo.packagist composer https://mirrors.cloud.tencent.com/composer/
+# # 安装 Composer
+RUN install-php-extensions @composer
 
 
 EXPOSE 9000

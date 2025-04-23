@@ -9,7 +9,7 @@ services:
     volumes:
       - ../NexusPHP:/var/www/NexusPHP
       - ../log/php:/tmp
-    command: /bin/sh -c "composer install && php-fpm -F"
+    command: /bin/sh -c "php-fpm -F"
     networks:
       - nexusphp-network
 

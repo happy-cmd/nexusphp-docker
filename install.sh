@@ -38,17 +38,17 @@ cd ..
 # Wait for 5 seconds to finish cloning
 sleep 5
 
-# Copy the install files to the public directory
-sourceDir="./NexusPHP/nexus/Install/install"
-targetDir="./NexusPHP/public/install"
+# # Copy the install files to the public directory
+# sourceDir="./NexusPHP/nexus/Install/install"
+# targetDir="./NexusPHP/public/install"
 
-# Retry copying files if sourceDir exists
-while [ ! -d "$sourceDir" ]; do
-    sleep 5
-done
+# # Retry copying files if sourceDir exists
+# while [ ! -d "$sourceDir" ]; do
+#     sleep 5
+# done
 
-mkdir -p "$targetDir"
-cp -r "$sourceDir/"* "$targetDir/"
+# mkdir -p "$targetDir"
+# cp -r "$sourceDir/"* "$targetDir/"
 
 # Function to generate a random password
 generate_password() {
