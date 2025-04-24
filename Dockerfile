@@ -11,8 +11,7 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     zlib-dev \
     hiredis-dev \
-    gmp-dev \
-    git
+    gmp-dev
 
 # 使用默认生产环境 PHP 配置
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -47,17 +46,10 @@ RUN install-php-extensions \
 # 复制应用代码
 COPY NexusPHP/. ./
 
-# 创建 /tmp 目录并设置权限（必须先于 dcron 安装）
 RUN mkdir -p /tmp && chmod 1777 /tmp
-
-# 安装 cron 并创建目录
-RUN apk add --no-cache dcron && \
-    mkdir -p /etc/cron.d 
 
 ENV COMPOSER_PROCESS_TIMEOUT=1200
 # # 安装 Composer
 RUN install-php-extensions @composer
 
-
 EXPOSE 9000
-CMD ["php-fpm"]

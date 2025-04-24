@@ -90,18 +90,28 @@ if [ ! -f "$SQL_SCRIPT_PATH" ]; then
 fi
 
 
-# 3.等待 MySQL 启动（无警告）
-echo "等待 MySQL 启动..."
-until docker exec $CONTAINER_NAME sh -c "MYSQL_PWD=${mysqlpassword} mysqladmin ping -uroot --silent"; do
+# 2. 等待 MySQL 启动（带超时）
+MAX_RETRIES=10
+RETRY_COUNT=0
+echo "等待 MySQL 启动（最多尝试 $MAX_RETRIES 次）..."
+until docker exec $CONTAINER_NAME sh -c 'MYSQL_PWD="$1" mysqladmin ping -uroot --silent' -- "$mysqlpassword" || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
   sleep 3
+  RETRY_COUNT=$((RETRY_COUNT+1))
 done
+if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+  echo "错误:MySQL 启动超时！"
+  exit 1
+fi
 
-# 4.执行初始化脚本
+
+# 3.执行初始化脚本
+# 3. 执行初始化脚本
 echo "执行数据库初始化脚本..."
-if ! docker exec -i "$CONTAINER_NAME" sh -c "export MYSQL_PWD='${mysqlpassword}'; mysql -u root -h 127.0.0.1" < "$SQL_SCRIPT_PATH"; then
+if ! docker exec -i "$CONTAINER_NAME" sh -c 'export MYSQL_PWD="$1"; mysql -u root' -- "$mysqlpassword" < "$SQL_SCRIPT_PATH"; then
     echo "SQL 脚本执行失败！"
     echo "请手动执行以下命令修复："
-    echo "docker exec -it pt-mysql mysql -u root -p'${mysqlpassword}' -e \"CREATE DATABASE nexusphp DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;\""
+    echo "1. 进入 MySQL 容器: docker exec -it $CONTAINER_NAME mysql -u root -p'${mysqlpassword}'"
+    echo "2. 手动执行 SQL 脚本内容: $SQL_SCRIPT_PATH"
     exit 1
 else
     echo "SQL 脚本执行成功！"
