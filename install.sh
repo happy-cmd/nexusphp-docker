@@ -40,11 +40,11 @@ sleep 5
 
 # Copy the install files to the public directory
 sourceDir="./NexusPHP/nexus/Install/install"
-targetDir="./NexusPHP/public/install"
+targetDir="./NexusPHP/public"
 
 # 示例：仅开放上传、缓存等目录
 chmod -R 755 ./NexusPHP
-chmod -R 777 ./NexusPHP/public/install \
+chmod -R 777 ./NexusPHP/public \
               ./NexusPHP/storage \
               ./NexusPHP/bootstrap/cache
 
