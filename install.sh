@@ -95,28 +95,27 @@ if [ ! -f "$SQL_SCRIPT_PATH" ]; then
   exit 1
 fi
 
-
 # 2. 等待 MySQL 启动（带超时）
 MAX_RETRIES=10
 RETRY_COUNT=0
 echo "等待 MySQL 启动（最多尝试 $MAX_RETRIES 次）..."
-until docker exec $CONTAINER_NAME sh -c 'MYSQL_PWD="$1" mysqladmin ping -uroot --silent' -- "$mysqlpassword" || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+until docker exec $CONTAINER_NAME mysqladmin ping -uroot --password="$mysqlpassword" --silent || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
   sleep 3
   RETRY_COUNT=$((RETRY_COUNT+1))
 done
+
 if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-  echo "错误:MySQL 启动超时！"
+  echo "错误：MySQL 启动超时！"
   exit 1
 fi
 
-
 # 3. 执行初始化脚本
 echo "执行数据库初始化脚本..."
-if ! docker exec -i "$CONTAINER_NAME" sh -c 'export MYSQL_PWD="$1"; mysql -u root' -- "$mysqlpassword" < "$SQL_SCRIPT_PATH"; then
+if ! docker exec -i "$CONTAINER_NAME" mysql -u root -h localhost --password="$mysqlpassword" < "$SQL_SCRIPT_PATH"; then
     echo "SQL 脚本执行失败！"
-    echo "请手动执行以下命令修复："
+    echo "手动修复步骤："
     echo "1. 进入 MySQL 容器: docker exec -it $CONTAINER_NAME mysql -u root -p'${mysqlpassword}'"
-    echo "2. 手动执行 SQL 脚本内容: $SQL_SCRIPT_PATH"
+    echo "2. 手动执行 SQL 文件: mysql -u root -p'${mysqlpassword}' -h localhost < $SQL_SCRIPT_PATH"
     exit 1
 else
     echo "SQL 脚本执行成功！"

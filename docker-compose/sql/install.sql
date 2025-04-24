@@ -1,3 +1,1 @@
-CREATE DATABASE IF NOT EXISTS nexusphp 
-  DEFAULT CHARACTER SET utf8mb4 
-  DEFAULT COLLATE utf8mb4_general_ci;
+create database `nexusphp` default charset=utf8mb4 collate utf8mb4_general_ci;
