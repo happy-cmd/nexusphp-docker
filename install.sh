@@ -110,7 +110,6 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
 fi
 
 
-# 3.执行初始化脚本
 # 3. 执行初始化脚本
 echo "执行数据库初始化脚本..."
 if ! docker exec -i "$CONTAINER_NAME" sh -c 'export MYSQL_PWD="$1"; mysql -u root' -- "$mysqlpassword" < "$SQL_SCRIPT_PATH"; then

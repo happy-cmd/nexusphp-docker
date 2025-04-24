@@ -25,23 +25,11 @@ COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr
 RUN install-php-extensions bcmath ctype curl fileinfo json mbstring openssl pdo_mysql tokenizer xml mysqli gd redis pcntl sockets posix gmp opcache ftp
 
 
-# 创建必要目录并设置权限
-RUN mkdir -p /tmp /var/log/cron /etc/cron.d \
-    && chmod 1777 /tmp \
-    && touch /var/log/cron/cron.log \
-    && chmod 666 /var/log/cron/cron.log
-
 # 安装 Composer
 ENV COMPOSER_PROCESS_TIMEOUT=1200
 RUN install-php-extensions @composer
 
 # 复制应用代码
 COPY NexusPHP/. ./
-
-RUN mkdir -p /tmp && chmod 1777 /tmp
-
-ENV COMPOSER_PROCESS_TIMEOUT=1200
-# # 安装 Composer
-RUN install-php-extensions @composer
 
 EXPOSE 9000
