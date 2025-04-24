@@ -1,26 +1,26 @@
 FROM php:8.1-fpm-alpine
 
-LABEL maintainer="shenghongzha@gmail.com"
-
-# 替换 Alpine 镜像源为阿里云镜像
+# 替换镜像源加速国内构建
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
-# 安装系统依赖包（提前安装加速后续扩展编译）
+# 安装系统依赖（新增 bash 用于调试）
 RUN apk add --no-cache \
+    bash \
     libpng-dev \
     libjpeg-turbo-dev \
     zlib-dev \
     hiredis-dev \
     gmp-dev \
-    git
+    git \
+    dcron  # Alpine 的 cron 实现
 
-# 使用默认生产环境 PHP 配置
+# 配置 PHP 生产环境
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 # 设置工作目录
 WORKDIR /var/www/NexusPHP
 
-# 安装 PHP 扩展（使用国内 PECL 镜像）
+# 安装 PHP 扩展（使用国内镜像加速）
 ENV PHP_EXTENSIONS_MIRROR=https://mirrors.aliyun.com/pecl/
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions \
@@ -44,20 +44,17 @@ RUN install-php-extensions \
     opcache \
     ftp
 
+# 创建必要目录并设置权限
+RUN mkdir -p /tmp /var/log/cron /etc/cron.d \
+    && chmod 1777 /tmp \
+    && touch /var/log/cron/cron.log \
+    && chmod 666 /var/log/cron/cron.log
+
+# 安装 Composer
+ENV COMPOSER_PROCESS_TIMEOUT=1200
+RUN install-php-extensions @composer
+
 # 复制应用代码
 COPY NexusPHP/. ./
 
-# 创建 /tmp 目录并设置权限（必须先于 dcron 安装）
-RUN mkdir -p /tmp && chmod 1777 /tmp
-
-# 安装 cron 并创建目录
-RUN apk add --no-cache dcron && \
-    mkdir -p /etc/cron.d 
-
-ENV COMPOSER_PROCESS_TIMEOUT=1200
-# # 安装 Composer
-RUN install-php-extensions @composer
-
-
 EXPOSE 9000
-CMD ["php-fpm"]
