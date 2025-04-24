@@ -1,8 +1,6 @@
 FROM php:8.1-fpm-alpine
 
-LABEL maintainer="shenghongzha@gmail.com"
-
-# 替换 Alpine 镜像源为阿里云镜像
+# 替换 Alpine 源
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 # 安装系统依赖包（提前安装加速后续扩展编译）
@@ -19,29 +17,23 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 # 设置工作目录
 WORKDIR /var/www/NexusPHP
 
-# 安装 PHP 扩展（使用国内 PECL 镜像）
-ENV PHP_EXTENSIONS_MIRROR=https://mirrors.aliyun.com/pecl/
+# 复制文件到容器中
+COPY NexusPHP/. .
+
+# 安装依赖包和 PHP 扩展
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions \
-    bcmath \
-    ctype \
-    curl \
-    fileinfo \
-    json \
-    mbstring \
-    openssl \
-    pdo_mysql \
-    tokenizer \
-    xml \
-    mysqli \
-    gd \
-    redis \
-    pcntl \
-    sockets \
-    posix \
-    gmp \
-    opcache \
-    ftp
+RUN install-php-extensions bcmath ctype curl fileinfo json mbstring openssl pdo_mysql tokenizer xml mysqli gd redis pcntl sockets posix gmp opcache ftp
+
+
+# 创建必要目录并设置权限
+RUN mkdir -p /tmp /var/log/cron /etc/cron.d \
+    && chmod 1777 /tmp \
+    && touch /var/log/cron/cron.log \
+    && chmod 666 /var/log/cron/cron.log
+
+# 安装 Composer
+ENV COMPOSER_PROCESS_TIMEOUT=1200
+RUN install-php-extensions @composer
 
 # 复制应用代码
 COPY NexusPHP/. ./

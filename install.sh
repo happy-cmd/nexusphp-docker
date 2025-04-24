@@ -38,17 +38,23 @@ cd ..
 # Wait for 5 seconds to finish cloning
 sleep 5
 
-# # Copy the install files to the public directory
-# sourceDir="./NexusPHP/nexus/Install/install"
-# targetDir="./NexusPHP/public/install"
+# Copy the install files to the public directory
+sourceDir="./NexusPHP/nexus/Install/install"
+targetDir="./NexusPHP/public"
 
-# # Retry copying files if sourceDir exists
-# while [ ! -d "$sourceDir" ]; do
-#     sleep 5
-# done
+# 示例：仅开放上传、缓存等目录
+chmod -R 755 ./NexusPHP
+chmod -R 777 ./NexusPHP/public \
+              ./NexusPHP/storage \
+              ./NexusPHP/bootstrap/cache
 
-# mkdir -p "$targetDir"
-# cp -r "$sourceDir/"* "$targetDir/"
+# Retry copying files if sourceDir exists
+while [ ! -d "$sourceDir" ]; do
+    sleep 5
+done
+
+mkdir -p "$targetDir"
+cp -r "$sourceDir/"* "$targetDir/"
 
 # Function to generate a random password
 generate_password() {
@@ -116,5 +122,3 @@ if ! docker exec -i "$CONTAINER_NAME" sh -c 'export MYSQL_PWD="$1"; mysql -u roo
 else
     echo "SQL 脚本执行成功！"
 fi
-
-echo "Installation completed"
