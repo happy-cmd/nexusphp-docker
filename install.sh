@@ -38,17 +38,23 @@ cd ..
 # Wait for 5 seconds to finish cloning
 sleep 5
 
-# # Copy the install files to the public directory
-# sourceDir="./NexusPHP/nexus/Install/install"
-# targetDir="./NexusPHP/public/install"
+# Copy the install files to the public directory
+sourceDir="./NexusPHP/nexus/Install/install"
+targetDir="./NexusPHP/public/install"
 
-# # Retry copying files if sourceDir exists
-# while [ ! -d "$sourceDir" ]; do
-#     sleep 5
-# done
+# 示例：仅开放上传、缓存等目录
+chmod -R 755 ./NexusPHP
+chmod -R 777 ./NexusPHP/public/install \
+              ./NexusPHP/storage \
+              ./NexusPHP/bootstrap/cache
 
-# mkdir -p "$targetDir"
-# cp -r "$sourceDir/"* "$targetDir/"
+# Retry copying files if sourceDir exists
+while [ ! -d "$sourceDir" ]; do
+    sleep 5
+done
+
+mkdir -p "$targetDir"
+cp -r "$sourceDir/"* "$targetDir/"
 
 # Function to generate a random password
 generate_password() {
@@ -96,15 +102,15 @@ until docker exec $CONTAINER_NAME sh -c "MYSQL_PWD=${mysqlpassword} mysqladmin p
   sleep 3
 done
 
-# 4.执行初始化脚本
+# 执行初始化脚本
 echo "执行数据库初始化脚本..."
-if ! docker exec -i "$CONTAINER_NAME" sh -c "export MYSQL_PWD='${mysqlpassword}'; mysql -u root -h 127.0.0.1" < "$SQL_SCRIPT_PATH"; then
+if ! docker exec -i "$CONTAINER_NAME" sh -c "export MYSQL_PWD='${mysqlpassword}'; mysql -u root" < "$SQL_SCRIPT_PATH"; then
     echo "SQL 脚本执行失败！"
-    echo "请手动执行以下命令修复："
-    echo "docker exec -it pt-mysql mysql -u root -p'${mysqlpassword}' -e \"CREATE DATABASE nexusphp DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;\""
+    echo "可能原因："
+    echo "1. MySQL 用户权限问题，尝试手动创建数据库："
+    echo "   docker exec -it pt-mysql mysql -u root -p'${mysqlpassword}' -e \"CREATE DATABASE nexusphp;\""
+    echo "2. 检查 SQL 文件路径：ls -l $SQL_SCRIPT_PATH"
     exit 1
 else
     echo "SQL 脚本执行成功！"
 fi
-
-echo "Installation completed"

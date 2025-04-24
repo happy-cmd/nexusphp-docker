@@ -5,13 +5,11 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 # 安装系统依赖（新增 bash 用于调试）
 RUN apk add --no-cache \
-    bash \
     libpng-dev \
     libjpeg-turbo-dev \
     zlib-dev \
     hiredis-dev \
     gmp-dev \
-    git \
     dcron  # Alpine 的 cron 实现
 
 # 配置 PHP 生产环境
