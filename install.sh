@@ -22,10 +22,6 @@ if [ -d "$LogPath" ]; then
     rm -rf "$LogPath"
 fi
 
-# 仅设置 ./log/php 的权限  保证/tmp 可读
-chown -R 82:82 "$LogPath/php"
-chmod 755 "$LogPath/php"  # 按需调整权限
-
 # 克隆子模块
 git submodule sync
 git submodule update --init --recursive
@@ -57,7 +53,7 @@ cp -r "$sourceDir/"* "$targetDir/"
 
 
 # 仅开放上传、缓存等目录
-
+chown -R 82:82 /var/nexusphp-docker/NexusPHP
 chmod -R 755 ./NexusPHP
 chmod -R 777 ./NexusPHP/public \
               ./NexusPHP/storage \

@@ -47,6 +47,13 @@ else
     exit 1
 fi
 
+
+
+# 仅设置 ./log/php 的权限  保证/tmp 可读
+LogPath="./log"
+chown -R 82:82 "$LogPath/php"
+chmod 755 "$LogPath/php"  # 按需调整权限
+
 # Set the container name and bash script path
 CONTAINER_NAME="pt-php"
 BASH_SCRIPT_PATH="./docker-compose/sh/timetask.sh"
