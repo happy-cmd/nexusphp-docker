@@ -17,15 +17,12 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 # 设置工作目录
 WORKDIR /var/www/NexusPHP
 
-# 创建 /tmp 目录并设置权限
-RUN mkdir -p /tmp && chmod 1777 /tmp
+
 
 
 # 复制文件到容器中
 COPY NexusPHP/. .
 
-# 将目录所有权赋予 www-data 用户/组（Alpine 中默认的 PHP-FPM 用户）
-RUN chown -R www-data:www-data /var/www/NexusPHP
 
 # 安装依赖包和 PHP 扩展
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
@@ -53,6 +50,5 @@ RUN install-php-extensions \
 # 安装 Composer
 ENV COMPOSER_PROCESS_TIMEOUT=1200
 RUN install-php-extensions @composer
-
 
 EXPOSE 9000
