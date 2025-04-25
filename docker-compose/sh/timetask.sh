@@ -9,14 +9,14 @@ CRON_JOB_1="* * * * * cd $ROOT_PATH && php artisan schedule:run >> /tmp/schedule
 CRON_JOB_2="* * * * * cd $ROOT_PATH && php include/cleanup_cli.php >> /tmp/cleanup_cli_nexusphp.log"
 
 # create a temporary file
-sudo crontab -u $PHP_USER -l 2>/dev/null > mycron
+crontab -u $PHP_USER -l 2>/dev/null > mycron
 
 # add new cron jobs to the existing cron jobs
 echo "$CRON_JOB_1" >> mycron
 echo "$CRON_JOB_2" >> mycron
 
 # install new cron file
-sudo crontab -u $PHP_USER mycron
+crontab -u $PHP_USER mycron
 
 # remove temporary file
 rm mycron

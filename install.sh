@@ -40,13 +40,7 @@ sleep 5
 
 # Copy the install files to the public directory
 sourceDir="./NexusPHP/nexus/Install/install"
-targetDir="./NexusPHP/public"
-
-# 示例：仅开放上传、缓存等目录
-chmod -R 755 ./NexusPHP
-chmod -R 777 ./NexusPHP/public \
-              ./NexusPHP/storage \
-              ./NexusPHP/bootstrap/cache
+targetDir="./NexusPHP/public/install"
 
 # Retry copying files if sourceDir exists
 while [ ! -d "$sourceDir" ]; do
@@ -55,6 +49,15 @@ done
 
 mkdir -p "$targetDir"
 cp -r "$sourceDir/"* "$targetDir/"
+
+# 示例：仅开放上传、缓存等目录
+chmod -R 755 ./NexusPHP
+chmod -R 777 ./NexusPHP/public \
+              ./NexusPHP/storage \
+              ./NexusPHP/bootstrap
+
+
+
 
 # Function to generate a random password
 generate_password() {
@@ -109,14 +112,16 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
   exit 1
 fi
 
-# 3. 执行初始化脚本
-echo "执行数据库初始化脚本..."
-if ! docker exec -i "$CONTAINER_NAME" mysql -u root -h localhost --password="$mysqlpassword" < "$SQL_SCRIPT_PATH"; then
-    echo "SQL 脚本执行失败！"
-    echo "手动修复步骤："
-    echo "1. 进入 MySQL 容器: docker exec -it $CONTAINER_NAME mysql -u root -p'${mysqlpassword}'"
-    echo "2. 手动执行 SQL 文件: mysql -u root -p'${mysqlpassword}' -h localhost < $SQL_SCRIPT_PATH"
-    exit 1
+# 3. Copy the SQL script to the container
+docker cp "$SQL_SCRIPT_PATH" "$CONTAINER_NAME":"$CONTAINER_SQL_SCRIPT_PATH"
+
+#  4. Execute the SQL script
+if ! docker exec -i "$CONTAINER_NAME" mysql -u root -p"$mysqlpassword" < "$CONTAINER_SQL_SCRIPT_PATH"; then
+    echo "SQL script execution failed!"
+    echo "Please create the database 'nexusphp' using the following command:"
+    echo "create database nexusphp default charset=utf8mb4 collate utf8mb4_general_ci;"
 else
-    echo "SQL 脚本执行成功！"
+    echo "SQL script executed successfully!"
 fi
+
+echo "Installation completed"
