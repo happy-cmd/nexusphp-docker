@@ -53,7 +53,7 @@ cp -r "$sourceDir/"* "$targetDir/"
 
 
 # 仅开放上传、缓存等目录
-chown -R 82:82 ./nexusphp-docker/NexusPHP
+chown -R 82:82 ./NexusPHP
 chmod -R 755 ./NexusPHP
 chmod -R 777 ./NexusPHP/public \
               ./NexusPHP/storage \
