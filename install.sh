@@ -52,7 +52,7 @@ mkdir -p "$targetDir"
 cp -r "$sourceDir/"* "$targetDir/"
 
 
-# 仅开放上传、缓存等目录
+# 仅开放上传、缓存等目录  82为容器内 www-data用户的指代
 chown -R 82:82 ./NexusPHP
 chmod -R 755 ./NexusPHP
 chmod -R 777 ./NexusPHP/public \

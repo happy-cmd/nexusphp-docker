@@ -8,7 +8,7 @@
 
 的基础上，添加一定的改动，补充说明了如何在VMware虚拟机安装ubuntu镜像，配置docker，到最终安装完毕的说明，算是一个更加便于理解的版本。
 
-**注：仅针对原项目在linux下的安装进行了分析说明，对于windows平台下的安装舍弃了。**
+**注：仅针对原项目在linux下的安装进行了分析说明，对于windows平台下的安装舍弃了，同时指定安装了v1.7.38版本（具体可修改 install.sh 文件）**
 
 ## 流程
 
@@ -113,13 +113,53 @@ CONTAINER ID   IMAGE                COMMAND                  CREATED          ST
 # 7. 进入pt-php容器
 docker exec -it pt-php sh
 
+# 8.切换时区
+/var/www/NexusPHP # date
+Wed May  7 14:25:31 UTC 2025
+/var/www/NexusPHP # apk add --no-cache tzdata
+fetch https://mirrors.aliyun.com/alpine/v3.21/main/x86_64/APKINDEX.tar.gz
+fetch https://mirrors.aliyun.com/alpine/v3.21/community/x86_64/APKINDEX.tar.gz
+(1/1) Installing tzdata (2025b-r0)
+OK: 43 MiB in 74 packages
+/var/www/NexusPHP # ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+/var/www/NexusPHP # echo "Asia/Shanghai" > /etc/timezone
+/var/www/NexusPHP # date
+Wed May  7 22:27:17 CST 2025
+
 # 8. 执行composer install (倘若安装时间过长，可切换composer的镜像源再重新开始)
 /var/www/NexusPHP # composer install
 
-# 9. 到此命令行操作结束
 ```
 
-访问localhost即可进入安装过程，需要注意的是，在安装过程的第二步安装时，请修改 **DB_HOST**与**REDIS_HOST**,如果在安装过程中选择docker启动mysql和redis，则将**DB_HOST**改为*mysql容器名（**pt-mysql**)*、**REDIS_HOST**改为*redis容器名(**pt-redis**)*
+9.访问localhost即可进入安装过程
+
+需要注意的是，在安装过程的第二步安装时，**注意时区选择正确**，同时请修改 **DB_HOST**与**REDIS_HOST**,如果在安装过程中选择docker启动mysql和redis，则将**DB_HOST**改为*mysql容器名（**pt-mysql**)*、**REDIS_HOST**改为*redis容器名(**pt-redis**)*，如下图：
+
+![](./README/%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A42.png)
+
+```shell
+# 10.安装完成后，pt-php容器内启动定时任务
+/var/www/NexusPHP # whoami
+root
+/var/www/NexusPHP # ps aux | grep crond
+  434 root      0:00 grep crond
+/var/www/NexusPHP # crontab -u www-data -l
+* * * * * cd /var/www/NexusPHP && php artisan schedule:run >> /tmp/schedule_nexusphp.log
+* * * * * cd /var/www/NexusPHP && php include/cleanup_cli.php >> /tmp/cleanup_cli_nexusphp.log
+/var/www/NexusPHP # /usr/sbin/crond -l 0
+/var/www/NexusPHP # ls -lh /var/spool/cron/crontabs/www-data
+-rw-------    1 root     root         184 May  7 22:24 /var/spool/cron/crontabs/www-data
+/tmp # ls -lh
+total 192K   
+-rw-r--r--    1 www-data www-data     342 May  7 22:36 cleanup_cli_nexusphp.log
+-rwxrwxrwx    1 root     root       37.4K May  7 22:36 nexus-2025-05-07.log
+-rw-r--r--    1 www-data www-data  117.5K May  7 22:31 nexus-install-20250507.log
+-rw-r--r--    1 www-data www-data   12.7K May  7 22:32 nexus.log
+-rw-r--r--    1 www-data www-data       0 May  7 22:36 nexus_cleanup_cli.lock
+-rw-r--r--    1 www-data www-data    1.4K May  7 22:36 schedule_nexusphp.log
+```
+
+注：由于容器内默认用户是root,故而安装完毕生成的第一次日志**nexus-2025-05-07.log**，所有者为root，进一步执行 chmod 777 nexus-2025-05-07.log，否则管理系统打不开，后续的日志由PHP用户www-data决定，不存在这个问题。
 
 ## 再次启动
 
